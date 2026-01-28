@@ -1,6 +1,6 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-import { useState } from "react";
 
 const Login = () => {
   const login = useAuthStore((state) => state.login);
@@ -13,12 +13,12 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
+    setLoading(true);
 
     try {
       await login(identifier, password);
-      navigate("/dashboard"); // ✅ redirect after login
+      navigate("/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -29,6 +29,15 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
+        {/* --- IMAGE AT THE TOP --- */}
+        <div className="flex justify-center mb-6">
+          <img
+            src="/logo.jpg" // replace with your image path
+            alt="Logo"
+            className="w-24 h-24 object-contain rounded-full"
+          />
+        </div>
+
         <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
           Sign in to your account
         </h1>
@@ -40,7 +49,6 @@ const Login = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Identifier */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email or Username
@@ -55,7 +63,6 @@ const Login = () => {
             />
           </div>
 
-          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Password
@@ -70,7 +77,6 @@ const Login = () => {
             />
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
@@ -80,8 +86,14 @@ const Login = () => {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
-          © {new Date().getFullYear()} Your App
+        {/* --- FORGOT PASSWORD LINK --- */}
+        <p className="text-center text-sm text-gray-500 mt-4">
+          <button
+            onClick={() => navigate("/forgot-password")}
+            className="text-blue-600 hover:underline"
+          >
+            Forgot Password?
+          </button>
         </p>
       </div>
     </div>

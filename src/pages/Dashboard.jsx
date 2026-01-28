@@ -34,7 +34,7 @@ const Dashboard = () => {
           onClick={handleLogout}
           className="w-full rounded-lg bg-red-600 text-white py-2 font-semibold hover:bg-red-700 transition"
         >
-          Sign Outt
+          Sign Out
         </button>
       </div>
     </div>
