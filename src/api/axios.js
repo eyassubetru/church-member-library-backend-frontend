@@ -15,7 +15,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        await useAuthStore.getState().refreshToken(); 
+        await useAuthStore.getState().refreshToken();
         return api(originalRequest);
       } catch {
         useAuthStore.getState().logout();
