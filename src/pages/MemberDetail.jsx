@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import Nav from "../components/Nav";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
+import MemberDocuments from "./MemberDocuments";
 
 const MemberDetail = () => {
   const { id } = useParams();
@@ -56,7 +57,12 @@ const MemberDetail = () => {
 
       <div className="max-w-4xl mx-auto pt-24 px-4">
         <h1 className="text-2xl font-bold mb-6">Edit Member</h1>
-
+ <button
+    onClick={() => navigate(`/documents/${id}`)}
+    className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+  >
+    View Documents
+  </button>
         {/* Personal Info */}
         <h2 className="font-semibold mb-2">Personal Info</h2>
         {["name","fatherName","grandfatherName","nameAmharic","fatherNameAmharic","grandfatherNameAmharic","sex","age","idNumber","phoneNumber","email"].map(field => (
@@ -153,7 +159,7 @@ const MemberDetail = () => {
         <button onClick={addCourse} className="bg-blue-600 text-white px-4 py-1 mb-3 rounded">+ Add Course</button>
 
         {/* Profile & Auth */}
-        {["profilePic","username","role"].map(field => (
+        {["profilePic","username","password","role"].map(field => (
           field === "role" ? (
             <select
               key={field}
