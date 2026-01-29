@@ -30,7 +30,6 @@ export const useAuthStore = create((set) => ({
   refreshSession: async () => {
     try {
       const res = await api.post("/auth/refresh");
-      console.log(res)
       set({
         accessToken: res.data.accessToken,
         user: res.data.member,

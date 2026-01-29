@@ -5,6 +5,8 @@ import Dashboard from "./pages/Dashboard";
 import { useAuthStore } from "./store/authStore";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import MemberDetail from "./pages/MemberDetail";
+import AddMember from "./pages/AddMember";
 
 function App() {
   const { isAuthenticated, refreshSession, loading,user } = useAuthStore();
@@ -24,11 +26,14 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-  <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
-  <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+  <Route path="/login" element={user.role === 'admin' ? <Navigate to="/dashboard" /> : <Login />} />
+  <Route path="/dashboard" element={user.role === 'admin' ? <Dashboard /> : <Navigate to="/login" />} />
+  <Route path="/members/:id" element={user.role === 'admin' ? <MemberDetail /> : <Navigate to="/login" />} />
+  <Route path="/members/add" element={user.role === 'admin' ? <AddMember /> : <Navigate to="/login" />} />
   <Route path="/forgot-password" element={<ForgotPassword />} />
   <Route path="/reset-password" element={<ResetPassword />} />
-  <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+  <Route path="*" element={<Navigate to={user.role === 'admin' ? "/dashboard" : "/login"} />} />
+  
 </Routes>
     </BrowserRouter>
   );

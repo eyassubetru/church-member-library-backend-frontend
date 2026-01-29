@@ -1,25 +1,66 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../store/authStore";
+import api from "../api/axios";
 import Nav from "../components/Nav";
+import MemberList from "../components/MemberList";
 
 const Dashboard = () => {
+  const [members, setMembers] = useState([]);
+  const [query, setQuery] = useState("");
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
+
+  useEffect(() => {
+    fetchMembers();
+  }, []);
+
+  const fetchMembers = async () => {
+    const res = await api.get("/members");
+    setMembers(res.data);
+  };
+
+  const searchMembers = async () => {
+    if (!query.trim()) {
+      fetchMembers();
+      return;
+    }
+    const res = await api.get(`/members/search?q=${query}`);
+    setMembers(res.data);
+  };
 
   return (
-   <div className="min-h-screen bg-gray-50">
-  <Nav />
-  
-  {/* This container aligns with the max-width of the Nav I gave you earlier */}
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-      <p className="text-gray-600 mt-1">
-        Logged in as: <span className="font-medium text-amber-600">{user?.name}</span>
-      </p>
+    <div className="min-h-screen bg-gray-50">
+      <Nav />
+
+      <div className="max-w-7xl mx-auto pt-24 px-4">
+        <div className="flex justify-between items-center mb-6 gap-4">
+          {/* Search */}
+          <div className="flex gap-2 w-full max-w-md">
+            <input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search member..."
+              className="border px-4 py-2 rounded-lg w-full"
+            />
+            <button
+              onClick={searchMembers}
+              className="bg-amber-500 px-4 py-2 rounded-lg font-semibold"
+            >
+              Search
+            </button>
+          </div>
+
+          {/* Add */}
+          <button
+            onClick={() => navigate("/members/add")}
+            className="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold"
+          >
+            + Add Member
+          </button>
+        </div>
+
+        <MemberList members={members} />
+      </div>
     </div>
-  </div>
-</div>
   );
 };
 
