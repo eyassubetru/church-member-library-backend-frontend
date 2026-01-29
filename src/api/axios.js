@@ -3,7 +3,8 @@ import { useAuthStore } from "../store/authStore";
 
 const api = axios.create({
   // baseURL: "http://localhost:5000/api",
-  baseURL: import.meta.env.VITE_API_URL,
+  // baseURL: import.meta.env.VITE_API_URL,
+  baseURL: "https://church-member-library-backend.onrender.com/api",
   withCredentials: true // IMPORTANT for cookies
 });
 
