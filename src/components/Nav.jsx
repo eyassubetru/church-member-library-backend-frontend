@@ -19,7 +19,7 @@ const Nav = () => {
               <img 
                 src="logo.jpg" 
                 alt="Logo" 
-                className="w-10 h-10 rounded-full object-cover"
+                className="w-10 h-10 rounded-full  border-0 object-cover"
               />
             </div>
             <div className="flex flex-col">
