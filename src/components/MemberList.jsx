@@ -1,16 +1,27 @@
 import { useNavigate } from "react-router-dom";
-import { User, Phone, Mail, Calendar } from "lucide-react";
+import { User, Phone, Mail, Calendar, Heart, HeartOff, Skull } from "lucide-react";
 
 const MemberList = ({ members }) => {
   const navigate = useNavigate();
 
-  const getStatusBadge = (isActive) => {
+  const getStatusBadge = (isActive, isAlive) => {
+    if (isAlive === false) {
+      return (
+        <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full flex items-center gap-1">
+          <Skull className="w-3 h-3" />
+          Deceased
+        </span>
+      );
+    }
+    
     return isActive ? (
-      <span className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs font-medium rounded-full">
+      <span className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs font-medium rounded-full flex items-center gap-1">
+        <Heart className="w-3 h-3" />
         Active
       </span>
     ) : (
-      <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full">
+      <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-full flex items-center gap-1">
+        <HeartOff className="w-3 h-3" />
         Inactive
       </span>
     );
@@ -25,27 +36,43 @@ const MemberList = ({ members }) => {
     });
   };
 
+  const getAvatarColor = (isAlive, isActive) => {
+    if (isAlive === false) return 'from-gray-600 to-gray-700';
+    return isActive ? 'from-emerald-500 to-emerald-600' : 'from-amber-500 to-amber-600';
+  };
+
   return (
     <div className="divide-y divide-gray-200">
       {members.map(m => (
         <div
           key={m._id}
           onClick={() => navigate(`/members/${m._id}`)}
-          className="flex items-center justify-between px-6 py-4 hover:bg-blue-50 cursor-pointer transition-colors group"
+          className={`flex items-center justify-between px-6 py-4 cursor-pointer transition-colors group ${
+            m.isAlive === false 
+              ? 'hover:bg-gray-50 opacity-90' 
+              : 'hover:bg-blue-50'
+          }`}
         >
           <div className="flex items-center gap-4 flex-1">
-            {/* Avatar */}
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-semibold">
-              {m.name?.charAt(0) || "M"}
+            {/* Avatar with deceased indicator */}
+            <div className="relative">
+              <div className={`w-12 h-12 bg-gradient-to-r ${getAvatarColor(m.isAlive, m.isActive)} rounded-full flex items-center justify-center text-white font-semibold`}>
+                {m.name?.charAt(0) || "M"}
+              </div>
+              {m.isAlive === false && (
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center border-2 border-white">
+                  <Skull className="w-3 h-3 text-white" />
+                </div>
+              )}
             </div>
             
             {/* Member Info */}
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-1">
-                <h3 className="font-semibold text-gray-800 group-hover:text-blue-700">
+                <h3 className={`font-semibold ${m.isAlive === false ? 'text-gray-700' : 'text-gray-800 group-hover:text-blue-700'}`}>
                   {m.name} {m.fatherName}
                 </h3>
-                {getStatusBadge(m.isActive)}
+                {getStatusBadge(m.isActive, m.isAlive)}
               </div>
               
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">
