@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import Nav from "../components/Nav";
 import MemberList from "../components/MemberList";
-import { Search, Users, Plus, Filter, Heart, HeartOff, Skull, Home } from "lucide-react";
+import { 
+  Search, Users, Plus, Filter, Heart, HeartOff, 
+  Skull, Home, Globe, MapPin, Flag 
+} from "lucide-react";
 
 const Dashboard = ({ showAlert }) => {
   const navigate = useNavigate();
@@ -11,12 +14,14 @@ const Dashboard = ({ showAlert }) => {
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("all"); // "all", "active", "inactive", "deceased"
+  const [activeFilter, setActiveFilter] = useState("all"); // "all", "active", "inactive", "deceased", "outside"
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
     inactive: 0,
-    deceased: 0
+    deceased: 0,
+    outsideEthiopia: 0,
+    inEthiopia: 0
   });
 
   useEffect(() => {
@@ -47,7 +52,19 @@ const Dashboard = ({ showAlert }) => {
     const deceased = membersData.filter(m => m.isAlive === false).length;
     const inactive = total - active - deceased;
     
-    setStats({ total, active, inactive, deceased });
+    // Members outside Ethiopia (country not "Ethiopia" or similar)
+    const outsideEthiopia = membersData.filter(m => {
+      const country = (m.country || "").toLowerCase().trim();
+      return country !== "" && 
+             country !== "ethiopia" && 
+             country !== "ኢትዮጵያ" &&
+             country !== "et" &&
+             country !== "eth";
+    }).length;
+    
+    const inEthiopia = total - outsideEthiopia;
+    
+    setStats({ total, active, inactive, deceased, outsideEthiopia, inEthiopia });
   };
 
   const filterMembers = () => {
@@ -62,6 +79,26 @@ const Dashboard = ({ showAlert }) => {
         break;
       case "deceased":
         filtered = members.filter(m => m.isAlive === false);
+        break;
+      case "outside":
+        filtered = members.filter(m => {
+          const country = (m.country || "").toLowerCase().trim();
+          return country !== "" && 
+                 country !== "ethiopia" && 
+                 country !== "ኢትዮጵያ" &&
+                 country !== "et" &&
+                 country !== "eth";
+        });
+        break;
+      case "ethiopia":
+        filtered = members.filter(m => {
+          const country = (m.country || "").toLowerCase().trim();
+          return country === "ethiopia" || 
+                 country === "ኢትዮጵያ" ||
+                 country === "et" ||
+                 country === "eth" ||
+                 country === "";
+        });
         break;
       default:
         filtered = members;
@@ -104,6 +141,10 @@ const Dashboard = ({ showAlert }) => {
         return stats.inactive;
       case "deceased":
         return stats.deceased;
+      case "outside":
+        return stats.outsideEthiopia;
+      case "ethiopia":
+        return stats.inEthiopia;
       default:
         return 0;
     }
@@ -122,12 +163,58 @@ const Dashboard = ({ showAlert }) => {
           return `${baseClass} bg-gradient-to-r from-amber-500 to-amber-600 text-white`;
         case "deceased":
           return `${baseClass} bg-gradient-to-r from-gray-600 to-gray-700 text-white`;
+        case "outside":
+          return `${baseClass} bg-gradient-to-r from-purple-600 to-purple-700 text-white`;
+        case "ethiopia":
+          return `${baseClass} bg-gradient-to-r from-red-600 to-red-700 text-white`;
         default:
           return `${baseClass} bg-gray-100 text-gray-800`;
       }
     }
     
     return `${baseClass} bg-white border border-gray-300 text-gray-700 hover:bg-gray-50`;
+  };
+
+  const getCountryFlag = (country) => {
+    const countryLower = (country || "").toLowerCase().trim();
+    
+    if (!countryLower) return "🇪🇹"; // Default to Ethiopia if no country
+    
+    if (countryLower === "ethiopia" || 
+        countryLower === "ኢትዮጵያ" || 
+        countryLower === "et" || 
+        countryLower === "eth") {
+      return "🇪🇹";
+    }
+    
+    // Map common countries to emoji flags
+    const countryFlags = {
+      "usa": "🇺🇸", "united states": "🇺🇸", "us": "🇺🇸",
+      "uk": "🇬🇧", "united kingdom": "🇬🇧", "britain": "🇬🇧",
+      "canada": "🇨🇦", "ca": "🇨🇦",
+      "australia": "🇦🇺", "au": "🇦🇺",
+      "germany": "🇩🇪", "de": "🇩🇪",
+      "france": "🇫🇷", "fr": "🇫🇷",
+      "italy": "🇮🇹", "it": "🇮🇹",
+      "spain": "🇪🇸", "es": "🇪🇸",
+      "china": "🇨🇳", "cn": "🇨🇳",
+      "japan": "🇯🇵", "jp": "🇯🇵",
+      "south korea": "🇰🇷", "korea": "🇰🇷", "kr": "🇰🇷",
+      "saudi arabia": "🇸🇦", "sa": "🇸🇦",
+      "uae": "🇦🇪", "united arab emirates": "🇦🇪",
+      "kenya": "🇰🇪", "ke": "🇰🇪",
+      "sudan": "🇸🇩", "sd": "🇸🇩",
+      "egypt": "🇪🇬", "eg": "🇪🇬",
+      "south africa": "🇿🇦", "za": "🇿🇦",
+    };
+    
+    for (const [key, flag] of Object.entries(countryFlags)) {
+      if (countryLower.includes(key)) {
+        return flag;
+      }
+    }
+    
+    return "🌍"; // Default globe for other countries
   };
 
   return (
@@ -138,87 +225,127 @@ const Dashboard = ({ showAlert }) => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Member Dashboard</h1>
-          <p className="text-gray-600">Manage all church members in one place</p>
+          <p className="text-gray-600">Manage all church members worldwide</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
           <div 
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => setActiveFilter("all")}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Total Members</p>
-                <p className="text-3xl font-bold text-gray-800">{stats.total}</p>
+                <p className="text-xs text-gray-600 mb-1">Total Members</p>
+                <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-blue-600" />
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Users className="w-5 h-5 text-blue-600" />
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                View All Members →
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <button className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                View All →
               </button>
             </div>
           </div>
           
           <div 
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => setActiveFilter("active")}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Active Members</p>
-                <p className="text-3xl font-bold text-emerald-600">{stats.active}</p>
+                <p className="text-xs text-gray-600 mb-1">Active Members</p>
+                <p className="text-2xl font-bold text-emerald-600">{stats.active}</p>
               </div>
-              <div className="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <Heart className="w-6 h-6 text-emerald-600" />
+              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <Heart className="w-5 h-5 text-emerald-600" />
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <button className="text-sm text-emerald-600 hover:text-emerald-800 font-medium">
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <button className="text-xs text-emerald-600 hover:text-emerald-800 font-medium">
                 View Active →
               </button>
             </div>
           </div>
           
           <div 
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => setActiveFilter("inactive")}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Inactive Members</p>
-                <p className="text-3xl font-bold text-amber-600">{stats.inactive}</p>
+                <p className="text-xs text-gray-600 mb-1">Inactive Members</p>
+                <p className="text-2xl font-bold text-amber-600">{stats.inactive}</p>
               </div>
-              <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <HeartOff className="w-6 h-6 text-amber-600" />
+              <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
+                <HeartOff className="w-5 h-5 text-amber-600" />
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <button className="text-sm text-amber-600 hover:text-amber-800 font-medium">
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <button className="text-xs text-amber-600 hover:text-amber-800 font-medium">
                 View Inactive →
               </button>
             </div>
           </div>
 
           <div 
-            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
             onClick={() => setActiveFilter("deceased")}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Deceased Members</p>
-                <p className="text-3xl font-bold text-gray-700">{stats.deceased}</p>
+                <p className="text-xs text-gray-600 mb-1">Deceased Members</p>
+                <p className="text-2xl font-bold text-gray-700">{stats.deceased}</p>
               </div>
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Skull className="w-6 h-6 text-gray-600" />
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Skull className="w-5 h-5 text-gray-600" />
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <button className="text-sm text-gray-600 hover:text-gray-800 font-medium">
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <button className="text-xs text-gray-600 hover:text-gray-800 font-medium">
                 View Deceased →
+              </button>
+            </div>
+          </div>
+
+          <div 
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setActiveFilter("ethiopia")}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-600 mb-1">In Ethiopia</p>
+                <p className="text-2xl font-bold text-red-600">{stats.inEthiopia}</p>
+              </div>
+              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <Flag className="w-5 h-5 text-red-600" />
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <button className="text-xs text-red-600 hover:text-red-800 font-medium">
+                View Ethiopia →
+              </button>
+            </div>
+          </div>
+
+          <div 
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setActiveFilter("outside")}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-600 mb-1">Outside Ethiopia</p>
+                <p className="text-2xl font-bold text-purple-600">{stats.outsideEthiopia}</p>
+              </div>
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Globe className="w-5 h-5 text-purple-600" />
+              </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <button className="text-xs text-purple-600 hover:text-purple-800 font-medium">
+                View Outside →
               </button>
             </div>
           </div>
@@ -235,7 +362,7 @@ const Dashboard = ({ showAlert }) => {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Search by name, ID, email..."
+                  placeholder="Search by name, ID, email, country..."
                   className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -316,6 +443,28 @@ const Dashboard = ({ showAlert }) => {
                   {stats.deceased}
                 </span>
               </button>
+              
+              <button
+                onClick={() => setActiveFilter("ethiopia")}
+                className={getFilterButtonClass("ethiopia")}
+              >
+                <Flag className="w-4 h-4" />
+                In Ethiopia
+                <span className="ml-1 px-2 py-0.5 bg-white/20 text-xs rounded-full">
+                  {stats.inEthiopia}
+                </span>
+              </button>
+              
+              <button
+                onClick={() => setActiveFilter("outside")}
+                className={getFilterButtonClass("outside")}
+              >
+                <Globe className="w-4 h-4" />
+                Outside Ethiopia
+                <span className="ml-1 px-2 py-0.5 bg-white/20 text-xs rounded-full">
+                  {stats.outsideEthiopia}
+                </span>
+              </button>
             </div>
           </div>
         </div>
@@ -329,6 +478,8 @@ const Dashboard = ({ showAlert }) => {
                 {activeFilter === "active" && "Active Members"}
                 {activeFilter === "inactive" && "Inactive Members"}
                 {activeFilter === "deceased" && "Deceased Members"}
+                {activeFilter === "ethiopia" && "Members in Ethiopia"}
+                {activeFilter === "outside" && "Members Outside Ethiopia"}
               </h2>
               <p className="text-sm text-gray-600">
                 {filteredMembers.length} {filteredMembers.length === 1 ? 'member' : 'members'} found
@@ -357,6 +508,10 @@ const Dashboard = ({ showAlert }) => {
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 {activeFilter === "deceased" ? (
                   <Skull className="w-8 h-8 text-gray-400" />
+                ) : activeFilter === "outside" ? (
+                  <Globe className="w-8 h-8 text-gray-400" />
+                ) : activeFilter === "ethiopia" ? (
+                  <Flag className="w-8 h-8 text-gray-400" />
                 ) : (
                   <Users className="w-8 h-8 text-gray-400" />
                 )}
@@ -365,10 +520,16 @@ const Dashboard = ({ showAlert }) => {
                 {activeFilter === "active" && "No Active Members"}
                 {activeFilter === "inactive" && "No Inactive Members"}
                 {activeFilter === "deceased" && "No Deceased Members"}
+                {activeFilter === "ethiopia" && "No Members in Ethiopia"}
+                {activeFilter === "outside" && "No Members Outside Ethiopia"}
               </h3>
               <p className="text-gray-600 mb-6">
                 {activeFilter === "deceased" 
                   ? "No deceased members in the records"
+                  : activeFilter === "outside"
+                  ? "No members living outside Ethiopia"
+                  : activeFilter === "ethiopia"
+                  ? "No members in Ethiopia"
                   : "No members found with this filter"}
               </p>
               {activeFilter !== "all" && (
@@ -381,8 +542,43 @@ const Dashboard = ({ showAlert }) => {
               )}
             </div>
           ) : (
-            <MemberList members={filteredMembers} />
+            <MemberList 
+              members={filteredMembers} 
+              getCountryFlag={getCountryFlag}
+              activeFilter={activeFilter}
+            />
           )}
+        </div>
+
+        {/* Quick Stats Summary */}
+        <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Statistics</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-800">{stats.total}</div>
+              <div className="text-sm text-gray-600">Total</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-emerald-600">{stats.active}</div>
+              <div className="text-sm text-gray-600">Active</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-amber-600">{stats.inactive}</div>
+              <div className="text-sm text-gray-600">Inactive</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-700">{stats.deceased}</div>
+              <div className="text-sm text-gray-600">Deceased</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">{stats.inEthiopia}</div>
+              <div className="text-sm text-gray-600">In Ethiopia</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{stats.outsideEthiopia}</div>
+              <div className="text-sm text-gray-600">Outside</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
