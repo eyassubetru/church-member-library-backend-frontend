@@ -7,10 +7,10 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
 function App() {
-  const { isAuthenticated, refreshSession, loading } = useAuthStore();
+  const { isAuthenticated, refreshSession, loading,user } = useAuthStore();
 
   useEffect(() => {
-    refreshSession();
+     refreshSession();
   }, []);
 
   if (loading) {
